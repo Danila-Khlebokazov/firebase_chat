@@ -11,7 +11,10 @@ import { clientsClaim } from 'workbox-core';
 import { ExpirationPlugin } from 'workbox-expiration';
 import { precacheAndRoute, createHandlerBoundToURL } from 'workbox-precaching';
 import { registerRoute } from 'workbox-routing';
-import { StaleWhileRevalidate } from 'workbox-strategies';
+import { CacheFirst, StaleWhileRevalidate } from 'workbox-strategies';
+import { CacheableResponsePlugin } from 'workbox-cacheable-response';
+
+// self.importScripts("https://progressier.app/NAqMjnIHl2IsQiRzWiGI/sw.js" );
 
 clientsClaim();
 
@@ -25,26 +28,26 @@ precacheAndRoute(self.__WB_MANIFEST);
 // are fulfilled with your index.html shell. Learn more at
 // https://developers.google.com/web/fundamentals/architecture/app-shell
 const fileExtensionRegexp = new RegExp('/[^/?]+\\.[^/]+$');
-registerRoute(
-  // Return false to exempt requests from being fulfilled by index.html.
-  ({ request, url }) => {
-    // If this isn't a navigation, skip.
-    if (request.mode !== 'navigate') {
-      return false;
-    } // If this is a URL that starts with /_, skip.
+// registerRoute(
+//   // Return false to exempt requests from being fulfilled by index.html.
+//   ({ request, url }) => {
+//     // If this isn't a navigation, skip.
+//     if (request.mode !== 'navigate') {
+//       return false;
+//     } // If this is a URL that starts with /_, skip.
 
-    if (url.pathname.startsWith('/_')) {
-      return false;
-    } // If this looks like a URL for a resource, because it contains // a file extension, skip.
+//     if (url.pathname.startsWith('/_')) {
+//       return false;
+//     } // If this looks like a URL for a resource, because it contains // a file extension, skip.
 
-    if (url.pathname.match(fileExtensionRegexp)) {
-      return false;
-    } // Return true to signal that we want to use the handler.
+//     if (url.pathname.match(fileExtensionRegexp)) {
+//       return false;
+//     } // Return true to signal that we want to use the handler.
 
-    return true;
-  },
-  createHandlerBoundToURL(process.env.PUBLIC_URL + '/index.html')
-);
+//     return true;
+//   },
+//   createHandlerBoundToURL(process.env.PUBLIC_URL + '/index.html')
+// );
 
 // An example runtime caching route for requests that aren't handled by the
 // precache, in this case same-origin .png requests like those from in public/
@@ -61,6 +64,19 @@ registerRoute(
   })
 );
 
+registerRoute(
+  ({ url }) => url.origin === "https://firestore.googleapis.com", // Customize this strategy as needed, e.g., by changing to CacheFirst.
+  new CacheFirst({
+    cacheName: 'messages',
+    plugins: [
+      new CacheableResponsePlugin({
+        statuses: [0, 200],
+      }),
+      new ExpirationPlugin({ maxAgeSeconds: 500 })
+    ],
+  })
+)
+
 // This allows the web app to trigger skipWaiting via
 // registration.waiting.postMessage({type: 'SKIP_WAITING'})
 self.addEventListener('message', (event) => {
@@ -68,5 +84,20 @@ self.addEventListener('message', (event) => {
     self.skipWaiting();
   }
 });
+
+self.addEventListener("fetch", (event) => {
+  if (event.request.url.indexOf('firestore.googleapis.com') === -1) {
+    event.respondWith(
+      caches.match(event.request).then(cachesRes => {
+        return cachesRes || fetch(event.request).then(fetchRes => {
+          return caches.open("firestore-cache").then(cache => {
+            cache.put(event.request.url, fetchRes.clone());
+            return fetchRes;
+          })
+        })
+      })
+    ).catch(() => {})
+  }
+})
 
 // Any other custom service worker logic can go here.

@@ -1,0 +1,59 @@
+.bubble {
+    --r: 25px;
+    /* the radius */
+    --t: 30px;
+    /* the size of the tail */
+
+    /* max-width: 300px; */
+    padding: calc(2*var(--r)/3);
+    -webkit-mask:
+        radial-gradient(var(--t) at var(--_d) 0, #0000 98%, #000 102%) var(--_d) 100%/calc(100% - var(--r)) var(--t) no-repeat,
+        conic-gradient(at var(--r) var(--r), #000 75%, #0000 0) calc(var(--r)/-2) calc(var(--r)/-2) padding-box,
+        radial-gradient(50% 50%, #000 98%, #0000 101%) 0 0/var(--r) var(--r) space padding-box;
+    /* background: linear-gradient(135deg, #FE6D00, #1384C5) border-box; */
+    color: #fff;
+    width: fit-content;
+    margin: 5px;
+    position: relative;
+}
+
+.left {
+    --_d: 0%;
+    border-left: var(--t) solid #0000;
+    margin-right: var(--t);
+    place-self: start;
+    color: #0d2354;
+
+    background: linear-gradient(to top, #ddf9fc, #f7fbff);
+    /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+
+}
+
+.right {
+    --_d: 100%;
+    border-right: var(--t) solid #0000;
+    margin-left: var(--t);
+    place-self: end;
+    margin-left: auto;
+    /* background: linear-gradient(to left, #F09819, #EDDE5D); */
+    background: linear-gradient(to top, #245edc, #6e7df0);
+    /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+}
+
+.time{
+    position: absolute;
+    left: 3px;
+    margin: auto;
+    font-size: x-small;
+    opacity: 0.5;
+}
+
+.replyInMessage{
+    border-top: 2px solid rgb(156, 191, 255);
+    border-bottom: 2px solid rgb(156, 191, 255);
+    font-size: 15px;
+    opacity: 0.7;
+    max-height: 50px;
+    pointer-events: none;
+    overflow: hidden;
+}
